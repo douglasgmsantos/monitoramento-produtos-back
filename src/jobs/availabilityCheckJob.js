@@ -18,10 +18,10 @@ class AvailabilityCheckJob {
                 });
               }
             });
-      
+
             const promises = products.map((product) => {
               if(product.soldBy.toLowerCase().trim() === 'amazon'){
-                return amazonProductAvailabilityService.checkAvailability(product.uid, product.name, product.url);
+                return amazonProductAvailabilityService.checkAvailability(product);
               }
               return Promise.resolve();
             });

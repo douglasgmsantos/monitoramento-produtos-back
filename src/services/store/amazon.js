@@ -72,13 +72,12 @@ class AmazonProductAvailabilityService extends AbstractProductAvailabilityServic
         }
     }
 
-    async verifyPrice($, { uid, name, url }){
+    async verifyPrice($){
         try {
             const noAvailablePrice = this.getNoAvailable($);
             if(noAvailablePrice === "NÃO DISPONÍVEL."){
-                await firebaseClient.saveNoAvailableProduct(uid, name, url);
-            return false;
-        }
+                return false;
+            }
 
             return true;
         } catch (error) {
@@ -87,12 +86,12 @@ class AmazonProductAvailabilityService extends AbstractProductAvailabilityServic
         }
     }
 
-    async checkAvailability(uid, name, url) {
+    async checkAvailability(product) {
         try {
-            const { data } = await axios.get(url);
+            const { data } = await axios.get(product.url);
             const $ = cheerio.load(data);
             
-            const isAvailable = await this.verifyPrice($, { uid, name, url });
+            const isAvailable = await this.verifyPrice($);
             
             if (!isAvailable) {
                 return;
@@ -100,21 +99,26 @@ class AmazonProductAvailabilityService extends AbstractProductAvailabilityServic
 
             const isPageDefault = this.getPageDefault($);
             if(isPageDefault){
-                await this.sendNotificationDefault($, uid, name, url);
+                await this.sendNotificationDefault($, product);
                 return;
             }
 
         } catch (error) {
-            logger.error(`Erro ao verificar disponibilidade do produto ${name}:`, error);
-            await firebaseClient.saveLog(uid, name, url, "Erro");
+            logger.error(`Erro ao verificar disponibilidade do produto ${product.name}:`, error);
+            await firebaseClient.saveLog(product.uid, product.name, product.url, "Erro");
             throw error;
         }
     }
 
-    async sendNotificationDefault($, uid, name, url){
+    async sendNotificationDefault($, product){
+        const { uid, name, url, maxPrice } = product;
         const soldBy = this.getSoldBy($);
         const sendBy = this.getSendBy($);
         const price = this.getPrice($);
+
+        if(price > maxPrice){
+            return;
+        }
 
         await firebaseClient.saveProductAvailability(uid, name, url, price, soldBy, sendBy);
     }
