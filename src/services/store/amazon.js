@@ -3,6 +3,8 @@ const cheerio = require("cheerio");
 
 const logger = require('../../logger/logger');
 const firebaseClient = require('../../clients/firebaseClient');
+const twilioClient = require('../../clients/twilioClient');
+
 const AbstractProductAvailabilityService = require("../interface/IProductAvailabilityService");
 
 class AmazonProductAvailabilityService extends AbstractProductAvailabilityService {
@@ -105,13 +107,12 @@ class AmazonProductAvailabilityService extends AbstractProductAvailabilityServic
 
         } catch (error) {
             logger.error(`Erro ao verificar disponibilidade do produto ${product.name}:`, error);
-            await firebaseClient.saveLog(product.uid, product.name, product.url, "Erro");
             throw error;
         }
     }
 
     async sendNotificationDefault($, product){
-        const { uid, name, url, maxPrice } = product;
+        const { uid, name, url, maxPrice,  } = product;
         const soldBy = this.getSoldBy($);
         const sendBy = this.getSendBy($);
         const price = this.getPrice($);
@@ -120,7 +121,17 @@ class AmazonProductAvailabilityService extends AbstractProductAvailabilityServic
             return;
         }
 
-        await firebaseClient.saveProductAvailability(uid, name, url, price, soldBy, sendBy);
+
+        const saveProduct = firebaseClient.saveProductAvailability(uid, name, url, price, soldBy, sendBy);
+        const sendMessage = twilioClient.sendMessage(product.phone, 
+            `Link: ${url}\n\n
+Produto: ${name} está disponível na ${product.soldBy}.\n
+Preço: ${price}\n
+Vendido por: ${soldBy}\n
+Enviado por: ${sendBy}\n`
+        );
+
+        await Promise.all([saveProduct, sendMessage]);
     }
 }
 

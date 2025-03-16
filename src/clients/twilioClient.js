@@ -7,11 +7,13 @@ class TwilioClient {
     }
 
     async sendMessage(to, body) {
-        return this.client.messages.create({
+        const message = {
             from: this.fromNumber,
             to: `whatsapp:${to}`,
             body
-        });
+        };
+
+        return this.client.messages.create(message);
     }
 
     async sendBulkMessages(phones, body) {

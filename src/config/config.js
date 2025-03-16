@@ -4,7 +4,7 @@ module.exports = {
     twilio: {
         accountSid: process.env.TWILIO_ACCOUNT_SID,
         authToken: process.env.TWILIO_AUTH_TOKEN,
-        fromNumber: "whatsapp:+14155238886"
+        fromNumber: process.env.TWILIO_FROM_NUMBER
     },
     firebase: {
         databaseURL: process.env.FIREBASE_DATABASE_URL,
