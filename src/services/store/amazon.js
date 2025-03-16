@@ -123,13 +123,15 @@ class AmazonProductAvailabilityService extends AbstractProductAvailabilityServic
 
 
         const saveProduct = firebaseClient.saveProductAvailability(uid, name, url, price, soldBy, sendBy);
-        const sendMessage = twilioClient.sendMessage(product.phone, 
-            `Link: ${url}\n\n
+        const sendMessage = twilioClient.sendMessage(product.phoneNumber, 
+`Link: ${url}\n\n
 Produto: ${name} está disponível na ${product.soldBy}.\n
 Preço: ${price}\n
 Vendido por: ${soldBy}\n
-Enviado por: ${sendBy}\n`
-        );
+Enviado por: ${sendBy}\n\n
+
+Para comprar, clique no link acima.
+`);
 
         await Promise.all([saveProduct, sendMessage]);
     }
